@@ -12,6 +12,7 @@ import db from "../backend/firebaseConfig";
 
 const localizer = momentLocalizer(moment);
 
+//Mock Data
 const myEventsList = [
   {
     title: "Maria Test - Room 1",
@@ -28,16 +29,20 @@ const myEventsList = [
 const Page = () => {
   const [books, setBooks] = useState([]);
 
+  const colors = ["#ff8000", "#008000", "#00ffff"];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const queryCustomers = await getDocs(collection(db, "customers"));
-        const totalBooks = queryCustomers.docs.flatMap((doc) => {
+        const totalBooks = queryCustomers.docs.flatMap((doc, index) => {
           const bookData = doc.data();
+          const color = colors[index % colors.length];
           const eventList = bookData.bookedRooms.map((room) => ({
             title: `${bookData.firstName} ${bookData.lastName} - ${room}`,
-            start: new Date(bookData.bookStart.seconds * 1000), // Convert Firestore timestamp to JavaScript Date object
-            end: new Date(bookData.bookEnd.seconds * 1000), // Convert Firestore timestamp to JavaScript Date object
+            start: bookData.bookStart.toDate(), // Convert Firestore timestamp to JavaScript Date object
+            end: bookData.bookEnd.toDate(), // Convert Firestore timestamp to JavaScript Date object
+            color: color,
           }));
           return eventList; // Return the eventList directly
         });
@@ -74,7 +79,13 @@ const Page = () => {
                 events={books}
                 startAccessor="start"
                 endAccessor="end"
-                style={{ height: 600 }}
+                style={{ height: 900 }}
+                showMultiDayTimes
+                eventPropGetter={(event, start, end, isSelected) => ({
+                  style: {
+                    backgroundColor: event.color,
+                  },
+                })}
               />
             </div>
           </Stack>

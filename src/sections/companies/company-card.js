@@ -15,6 +15,8 @@ import {
   TextField,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { updateDoc, doc, getDocs, query, collection, where } from "firebase/firestore/lite";
+import db from "../../backend/firebaseConfig";
 
 export const CompanyCard = (room) => {
   const [editOpen, setEditOpen] = useState(false);
@@ -22,34 +24,57 @@ export const CompanyCard = (room) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const { bed, image, capacity, cost, reservedFrom, reservedTo, services, size, name } = room.room;
 
+  const updateRoom = async (updatedRoomData, roomName) => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "rooms"));
+      let docId;
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.name === roomName) {
+          docId = doc.id;
+        }
+      });
+      if (docId) {
+        await updateDoc(doc(db, "rooms", docId), updatedRoomData);
+        console.log("Room updated successfully");
+      } else {
+        console.error("No document found with the specified roomName:", roomName);
+      }
+    } catch (e) {
+      console.error("Failed to update room:", e);
+    }
+  };
+
   const handleEditOpen = (room) => {
     setSelectedRoom(room);
     setEditOpen(true);
-    console.log(selectedRoom);
   };
 
   const handleEditClose = (room) => {
+    setSelectedRoom(null);
     setEditOpen(false);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    const parsedValue = name === "capacity" || name === "cost" ? parseInt(value) : value;
+
     setEditedRoom((prev) => ({
       ...prev,
       room: {
         ...prev.room,
-        [name]: value,
+        [name]: parsedValue,
       },
     }));
   };
 
-  useEffect(() => {
-    console.log(editedRoom);
-  }, [editedRoom]);
-
   const handleSaveChanges = () => {
     // Perform the query to update the room data in the database using editedRoom
     console.log("Saving changes:", editedRoom);
+
+    //Update Firestore
+    updateRoom(editedRoom, selectedRoom.room.name);
     // Reset the modal state
     setEditOpen(false);
   };
@@ -97,7 +122,7 @@ export const CompanyCard = (room) => {
           </Typography>
         </Stack>
         <Stack alignItems="center" direction="row" spacing={1}>
-          <Button variant="outlined" onClick={handleEditOpen}>
+          <Button variant="outlined" onClick={() => handleEditOpen(room)}>
             Edit Room
           </Button>
         </Stack>
@@ -119,7 +144,7 @@ export const CompanyCard = (room) => {
             Edit Room
           </Typography>
           <form>
-            <TextField fullWidth label="Name" name="name" margin="normal" onChange={handleChange} />
+            {/* <TextField fullWidth label="Name" name="name" margin="normal" onChange={handleChange} /> */}
             <TextField fullWidth label="Bed" name="bed" margin="normal" onChange={handleChange} />
             <TextField
               fullWidth
