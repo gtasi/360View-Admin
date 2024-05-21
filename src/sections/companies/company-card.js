@@ -122,9 +122,9 @@ export const CompanyCard = (room) => {
           </Typography>
         </Stack>
         <Stack alignItems="center" direction="row" spacing={1}>
-          <Button variant="outlined" onClick={() => handleEditOpen(room)}>
+          {/* <Button variant="outlined" onClick={() => handleEditOpen(room)}>
             Edit Room
-          </Button>
+          </Button> */}
         </Stack>
       </Stack>
       <Modal open={editOpen} onClose={handleEditClose} aria-labelledby="add-room-modal-title">
